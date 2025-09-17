@@ -1,0 +1,52 @@
+.loginBg {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.loginContainer {
+  margin-top: 0.5rem;
+  width: 100%;
+  max-width: 380px;
+  border-radius: 15px;
+  background-color: white;
+}
+
+.customInput {
+  background-color: #000;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: none;
+  outline: none;
+}
+
+.customInput::placeholder {
+  color: #ccc;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  cursor: pointer;
+  color: #ccc;
+  font-size: 18px;
+}
+
+.passwordToggle:hover {
+  color: #007bff;
+}
+
+.btnPrimary {
+  background: linear-gradient(90deg, #00c6ff, #0072ff);
+  border: none;
+  font-weight: bold;
+}
+
+.btnPrimary:hover {
+  background: linear-gradient(90deg, #0072ff, #0056b3);
+}
