@@ -18,7 +18,7 @@ const ComposeEmail = ({ senderEmail }) => {
         from: senderEmail,
         subject,
         body,
-        timestamp: new Date().toISOString,
+        timestamp: new Date().toISOString(),
       };
 
       if (!/\S+@\S+\.\S+/.test(to)) {
