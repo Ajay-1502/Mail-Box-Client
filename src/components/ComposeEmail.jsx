@@ -15,10 +15,11 @@ const ComposeEmail = ({ senderEmail }) => {
 
       const mailData = {
         to,
-        from: senderEmail,
+        from: senderEmail || 'ajay@gmail.com',
         subject,
         body,
         timestamp: new Date().toISOString(),
+        read: false,
       };
 
       if (!/\S+@\S+\.\S+/.test(to)) {
@@ -30,7 +31,10 @@ const ComposeEmail = ({ senderEmail }) => {
       // sent/<senderEmail>/{pushId}     → for sent mails
 
       const cleanReceiver = (to || '').replace(/[@.]/g, '_');
-      const cleanSender = (senderEmail || '').replace(/[@.]/g, '_');
+      const cleanSender = (senderEmail || 'ajay@gmail.com').replace(
+        /[@.]/g,
+        '_'
+      );
 
       const inboxRes = await fetch(
         `https://mail-box-client-f22d7-default-rtdb.firebaseio.com/inbox/${cleanReceiver}.json`,
