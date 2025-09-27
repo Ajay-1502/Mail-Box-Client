@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { ref, onValue, update, remove } from 'firebase/database';
+import { db } from '../firebase'; // imported db instance
 
 const Inbox = ({ userEmail }) => {
   const [mails, setMails] = useState([]);
@@ -10,42 +12,37 @@ const Inbox = ({ userEmail }) => {
   const cleanEmail = (userEmail || 'testuser1@gmail.com').replace(/[@.]/g, '_');
 
   useEffect(() => {
-    const fetchMails = async () => {
-      try {
-        const res = await fetch(
-          `https://mail-box-client-f22d7-default-rtdb.firebaseio.com/inbox/${cleanEmail}.json`
-        );
+    //ref() tells firebase exactly where to look in the database
+    const mailRef = ref(db, `inbox/${cleanEmail}`);
 
-        if (!res.ok) throw new Error('Failed to fetch mails.');
+    // onValue is a real-time listener
+    // snapshot is like a screenshot of data at that moment
+    const unsubscribe = onValue(mailRef, (snapshot) => {
+      //Extracts actual data stored at that location
+      const data = snapshot.val();
 
-        const data = await res.json();
-        if (!data) {
-          setMails([]);
-          setLoading(false);
-          return;
-        }
-
-        // Convert object → array
-        const loadedMails = Object.entries(data).map(([id, mail]) => ({
-          id,
-          ...mail,
-        }));
-
-        // Sort newest first
-        loadedMails.sort(
-          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
-        );
-
-        setMails(loadedMails);
-      } catch (err) {
-        console.error('Error fetching inbox:', err);
-        alert('Error fetching inbox:', err);
-      } finally {
+      //If data is not found then it sets mails to empty array and loading to false
+      if (!data) {
+        setMails([]);
         setLoading(false);
+        return;
       }
-    };
 
-    fetchMails();
+      //Convert objects to array of objects
+      const loadedMails = Object.entries(data).map(([id, mail]) => ({
+        id,
+        ...mail,
+      }));
+
+      //Sorts mail in descending order based on date and time (To show latest first)
+      loadedMails.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      setMails(loadedMails);
+      setLoading(false);
+    });
+
+    // detach listener when component unmounts
+    return () => unsubscribe();
   }, [cleanEmail]);
 
   if (loading) return <p className="text-center mt-4">Loading inbox...</p>;
@@ -54,6 +51,14 @@ const Inbox = ({ userEmail }) => {
   const openMail = (mail) => {
     setSelectedMail(mail);
     setShowModal(true);
+
+    if (!mail.read) {
+      //ref() tells firebase exactly where to look for the required email
+      const mailRef = ref(db, `inbox/${cleanEmail}/${mail.id}`);
+
+      //Updates only read field in the mailObject
+      update(mailRef, { read: true });
+    }
   };
 
   // close modal
@@ -62,9 +67,27 @@ const Inbox = ({ userEmail }) => {
     setShowModal(false);
   };
 
+  // Delete mail after user clicks on delete button
+  const handleDeleteMail = async (id) => {
+    try {
+      const mailRef = ref(db, `inbox/${cleanEmail}/${id}`);
+
+      //Removes mail that matches with id from firebase, since we are using real-time firebase , we get updated UI on screen without refreshing the screen.
+      await remove(mailRef);
+      alert('🗑️ Mail deleted successfully!');
+    } catch (err) {
+      alert('❌ Failed to delete mail. Try again.');
+    }
+  };
+
   return (
     <div className="container mt-4">
       <h3 className="mb-3">📥 Inbox</h3>
+
+      {/* Counts mails that are not read*/}
+      <span className="badge bg-danger mb-3">
+        {mails.filter((m) => !m.read).length} Unread
+      </span>
 
       {mails.length === 0 ? (
         <p>No mails found.</p>
@@ -73,17 +96,36 @@ const Inbox = ({ userEmail }) => {
           {mails.map((mail) => (
             <li
               key={mail.id}
-              className="list-group-item d-flex justify-content-between align-items-center"
+              className="list-group-item d-flex justify-content-between align-items-center m-2"
               style={{ cursor: 'pointer' }}
               onClick={() => openMail(mail)}
             >
               <div>
+                {!mail.read && (
+                  <span
+                    className="badge bg-primary me-2"
+                    style={{
+                      borderRadius: '50%',
+                      width: '6px',
+                      height: '15px',
+                    }}
+                  >
+                    &nbsp;
+                  </span>
+                )}
                 <strong>{mail.subject || '(No Subject)'}</strong>
                 <div className="text-muted small">From: {mail.from}</div>
               </div>
-              <span className="text-muted small">
+              <span className="text-muted small align-items-end">
                 {new Date(mail.timestamp).toLocaleString()}
               </span>
+
+              <button
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => handleDeleteMail(mail.id)}
+              >
+                🗑️
+              </button>
             </li>
           ))}
         </ul>
