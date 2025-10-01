@@ -1,49 +1,17 @@
-import { useEffect, useState } from 'react';
-import { ref, onValue, update, remove } from 'firebase/database';
+import { useState } from 'react';
+import { ref, update, remove } from 'firebase/database';
 import { db } from '../firebase'; // imported db instance
+import { useMails } from '../hooks/useMails';
 
 const Inbox = ({ userEmail }) => {
-  const [mails, setMails] = useState([]);
   const [selectedMail, setSelectedMail] = useState(null); // store clicked mail
   const [showModal, setShowModal] = useState(false); // modal state
-  const [loading, setLoading] = useState(true);
 
   // Convert email to Firebase-safe key
   const cleanEmail = (userEmail || 'testuser1@gmail.com').replace(/[@.]/g, '_');
 
-  useEffect(() => {
-    //ref() tells firebase exactly where to look in the database
-    const mailRef = ref(db, `inbox/${cleanEmail}`);
-
-    // onValue is a real-time listener
-    // snapshot is like a screenshot of data at that moment
-    const unsubscribe = onValue(mailRef, (snapshot) => {
-      //Extracts actual data stored at that location
-      const data = snapshot.val();
-
-      //If data is not found then it sets mails to empty array and loading to false
-      if (!data) {
-        setMails([]);
-        setLoading(false);
-        return;
-      }
-
-      //Convert objects to array of objects
-      const loadedMails = Object.entries(data).map(([id, mail]) => ({
-        id,
-        ...mail,
-      }));
-
-      //Sorts mail in descending order based on date and time (To show latest first)
-      loadedMails.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-      setMails(loadedMails);
-      setLoading(false);
-    });
-
-    // detach listener when component unmounts
-    return () => unsubscribe();
-  }, [cleanEmail]);
+  //Passing values to custom hooks to handle the firebase logic
+  const { mails, loading } = useMails('inbox', cleanEmail);
 
   if (loading) return <p className="text-center mt-4">Loading inbox...</p>;
 
