@@ -1,12 +1,17 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import styles from './Login.module.css';
+import AuthContext from './context/auth-context';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  const navigate = useNavigate();
+  const authCtx = useContext(AuthContext);
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -18,7 +23,7 @@ const Login = () => {
     if (password.trim().length > 6) {
       await loginHandler();
     } else {
-      toast.error('Password must be atleast 6 characters long');
+      toast.error('Password must be atleast 7 characters long');
     }
   };
 
@@ -46,8 +51,9 @@ const Login = () => {
 
       const data = await response.json();
       console.log(data);
-      localStorage.setItem('token', data.idToken);
+      authCtx.login(data.email);
       toast.success('Login is successful!🎉');
+      navigate('/inbox');
     } catch (err) {
       toast.error(err.message);
     }

@@ -13,7 +13,7 @@ const Inbox = ({ userEmail }) => {
   //Passing values to custom hooks to handle the firebase logic
   const { mails, loading } = useMails('inbox', cleanEmail);
 
-  if (loading) return <p className="text-center mt-4">Loading inbox...</p>;
+  if (loading) return <p className="text-center mt-4">Loading Inbox...</p>;
 
   // open modal with selected mail
   const openMail = (mail) => {
