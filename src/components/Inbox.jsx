@@ -3,12 +3,13 @@ import { ref, update, remove } from 'firebase/database';
 import { db } from '../firebase'; // imported db instance
 import { useMails } from '../hooks/useMails';
 
-const Inbox = ({ userEmail }) => {
+const Inbox = () => {
   const [selectedMail, setSelectedMail] = useState(null); // store clicked mail
   const [showModal, setShowModal] = useState(false); // modal state
 
+  const userEmail = localStorage.getItem('email');
   // Convert email to Firebase-safe key
-  const cleanEmail = (userEmail || 'testuser1@gmail.com').replace(/[@.]/g, '_');
+  const cleanEmail = userEmail.replace(/[@.]/g, '_');
 
   //Passing values to custom hooks to handle the firebase logic
   const { mails, loading } = useMails('inbox', cleanEmail);
